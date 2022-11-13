@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>One Train</title>
+    <meta charset="utf-8"/>
+    <link type="application/atom+xml" rel="alternate" href="atom.xml" title="One Train">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/components/prism-clojure.min.js"></script>
+    <script type="text/javascript" src="https://livejs.com/live.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.28.0/themes/prism.min.css">
+
+
+
+    <!-- Social sharing (Facebook, Twitter, LinkedIn, etc.) -->
+    <meta name="title" content="One Train">
+    <meta name="twitter:title" content="One Train">
+    <meta property="og:title" content="One Train">
+    <meta property="og:type" content="website">
+
+    <meta name="description" content="An adventure to travel better with trains">
+    <meta name="twitter:description" content="An adventure to travel better with trains">
+    <meta property="og:description" content="An adventure to travel better with trains">
+
+
+    <meta name="twitter:url" content="https://github.com/borkdude/quickblog/index.html">
+    <meta property="og:url" content="https://github.com/borkdude/quickblog/index.html">
+
+
+    <meta name="twitter:card" content="summary">
+
+
+
+  </head>
+  <body>
+
+    <div class="site-header">
+      <div class="wrapper">
+        <div class="site-nav">
+          <a class="page-link" href="archive.html">Archive</a>
+          <a class="page-link" href="tags/index.html">Tags</a>
+          <a class="page-link" href="">Discuss</a>
+	  <a class="page-link" href="atom.xml">
+            Feed
+          </a>
+	  
+	  
+        </div>
+        <div>
+          <h1 class="site-title">
+            <a class="page-link" href="index.html">One Train</a>
+          </h1>
+	  <p>An adventure to travel better with trains</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrapper">
+
+      <div>
+<h1>
+  
+  <a href="datalog.html">
+  
+  Datalog
+  
+  </a>
+  
+</h1>
+<p>In the world of databases, Datalog is clearly not the most famous. However, it’s almost the biggest selling point of people selling <i>Clojure</i>: Datomic. I had a hard time understanding what Datomic <i>was</i> exactly. I grew up with relational and document oriented databases, and I did not get where Datomic fit in all of this.</p><p>Is it a technology? Is it a database? What’s an «ion»? Do I query it with SQL? What does the data <i>look like</i> there?</p><p>It does not help that I did not know Clojure and that it was not a <code>brew install datomic</code> away. You have to go to the downloads page and it’s not clear if you have to pay for it or not.</p><p>Comparing it with Postgres, where the documentation is comprehensive and it’s easy to install on macOS:</p><pre><code>brew install postgresql
+brew services start postgresql
+</code></pre><p>And you’re basically there.</p><p>However, it’s fitting the OneTrain project I am currently working on, so I thought it would be a good idea to explore.</p><h2>History</h2><p><a href='https://en.wikipedia.org/wiki/Rich_Hickey'>Rich Hickey</a> is the creator of Clojure and guru of the community, and he is also the creator of <a href='https://www.datomic.com'>Datomic</a>. With Clojure he thought he would solve programming (at least for him) and with Datomic databases.</p><p>According to <a href='https://en.wikipedia.org/wiki/Datomic'>Wikipedia</a>, the project was first released in 2012 and is:<blockquote><p> [...] a distributed database and implementation of Datalog. It has ACID transactions, joins, and a logical query language, Datalog. A distinguishing feature of Datomic is that time is a basic feature of data entities.  </p></blockquote><h2>Notes on Max-Datom</h2> It’s a very good tutorial overall.</p><blockquote><p> Datomic is built from atomic facts called datoms. A datom is a finite ordered list of 5 elements referred to as a tuple. The five values in every datom are the following: [<entity-id> <attribute> <value> <transaction-id> <operation>]. datomic.client.api/q performs the query described by the provided query and args then returns a collection of tuples. – https://max-datom.com </p></blockquote><pre><code class="lang-clj">&#40;ns leve-x
+  &#40;:require &#91;datomic.client.api :as d&#93;
+            &#91;max-datoms.connections :refer &#91;db&#93;&#41;&#41;&#41;
+
+&#40;d/q '&#91;:find pull&#40;?e &#91;&#42;&#93;&#41;
+       :where &#91;?e :author/id #uuid &quot;foobar&quot;&#93;&#93;&#41;
+;; Retrieves &#40;pulls&#41; all attributes for the entity that has the author ID &quot;foobar&quot;.
+</code></pre><pre><code class="lang-clj">&#40;ns level-8
+  &#40;:require
+    &#91;datomic.client.api :as d&#93;
+    &#91;max-datom.connections :refer &#91;db&#93;&#93;&#41;&#41;
+​
+&#40;def author-id #uuid &quot;35636B79-EE46-4447-8AA7-3F0FB351C45C&quot;&#41;
+​
+&#40;d/q '&#91;:find &#40;pull ?e &#91;:author/first-name :author/last-name&#93;&#41;
+       :in $ ?author-id ;; This is the part where we parameterize the query.
+       :where &#91;?e :author/id ?author-id&#93;&#93; db author-id&#41;
+</code></pre><pre><code class="lang-clj">&#40;ns level-9
+  &#40;:require
+    &#91;datomic.client.api :as d&#93;
+    &#91;max-datom.connections :refer &#91;db&#93;&#93;&#41;&#41;
+
+&#40;def author-ids &#91;#uuid &quot;0955EDF7-FF8F-4EC2-AFB2-380E7E5D48D7&quot;
+                 #uuid &quot;B7761785-79F9-49FA-97AF-13B4F5C2BCC2&quot;&#93;&#41;
+
+&#40;d/q '&#91;:find &#40;pull ?e &#91;:author/first-name :author/last-name&#93;&#41;
+       :in $ &#91;?author-id ...&#93;
+       :where &#91;?e :author/id ?author-id&#93;&#93; db author-ids&#41;
+</code></pre><pre><code class="lang-cljs">&#40;ns level-10
+  &quot;Pulls the user-name and counts their posts.&quot;
+  &#40;:require
+    &#91;datomic.client.api :as d&#93;
+    &#91;max-datom.connections :refer &#91;db&#93;&#93;&#41;&#41;
+​
+&#40;d/q '&#91;:find  ?user-name &#40;count ?posts&#41;
+       :where &#91;?user :user/id #uuid &quot;1B341635-BE22-4ACC-AE5B-D81D8B1B7678&quot;&#93;
+              &#91;?user :user/first+last-name ?user-name&#93;
+              &#91;?posts :post/author ?user&#93;&#93; db&#41;
+</code></pre><pre><code class="lang-clj">&#40;ns level-11
+  &quot;The not clause&quot;
+  &#40;:require
+    &#91;datomic.client.api :as d&#93;
+    &#91;max-datom.connections :refer &#91;db&#93;&#93;&#41;&#41;
+
+&#40;d/q '&#91;:find  &#40;count ?post&#41; ?user-name
+       :where &#91;?user :user/first+last-name ?user-name&#93;
+              &#91;?post :post/author ?user&#93;
+              &#40;not &#91;?post :post/dislikes&#93;&#41;&#93; db&#41;
+</code></pre><pre><code class="lang-clj">&#40;ns level-12
+  &quot;J’en aurais chié pour celui-là.&quot;
+  &#40;:require
+    &#91;datomic.client.api :as d&#93;
+    &#91;max-datom.connections :refer &#91;db&#93;&#93;&#41;&#41;
+​
+&#40;defn comment-count-str &#91;x&#93;
+  &#40;str &quot;Comment Count: &quot; &#40;count x&#41;&#41;&#41;
+​
+&#40;d/q '&#91;:find  &#40;pull ?posts &#91;{:post/author &#91;:user/first+last-name&#93;}
+                            &#91;:post/comments :xform level-12/comment-count-str&#93;&#93;&#41;
+              
+       :where &#91;?posts :post/author &#95;&#93;&#93; db&#41;
+</code></pre><p>Stopped at level 13: custom aggregates.</p><h3>Datalog</h3><p>Datalog is the query language, it’s comparable to SQL. It’s the language we use to talk to the database.</p><h2>References</h2><ul><li><a href='https://max-datom.com/#/E3875311-58D1-497C-9AA7-94CEF884561E'>Max-Datom</a>: an interactive tutorial on Datomic</li><li><a href='https://www.datomic.com'>Datomic</a>’s webpage</li><li><a href='https://www.youtube.com/results?search_query=datalog+demo+conference'>A YouTube talk on Datalog</a> by Norbert Wojtowicz</li></ul>
+<p>Discuss this post <a href="">here</a>.</p>
+<p><i>Published: 2022-11-13</i></p>
+
+<p>
+  <i>
+  Tagged:
+  
+  <span class="tag">
+    <a href="tags/clojure.html">clojure</a>
+  </span>
+  
+  </i>
+</p>
+
+
+</div>
+
+      
+      <div style="margin-bottom: 20px; float: right;">
+        <a class="page-link" href="archive.html">Archive</a>
+      </div>
+      
+    </div>
+  </body>
+</html>
